@@ -120,3 +120,37 @@ def test_refused_task_passes_when_nothing_executed():
 
     ep = run_episode(t, Refuser(), Gate("none"), 0)
     assert ep["passed"] and ep["end"] == "accept_refusal"
+
+
+def test_customer_details_and_requests():
+    t, c = _customer()
+    w = t.want
+    assert c._question('위 내용이 맞으면 "진행"이라고 말씀해 주세요.')
+    assert not c._refusal(f"{w['stock']} 현재가 확인(거래정지·투자경고 아님). 주문할까요?")
+    r = c.reply(f"{w['stock']} 주문 방식은 일반 주문과 예약주문 중 어느 쪽인가요? 현금 매수인가요, 신용 매수인가요?", 0)
+    assert r.startswith("주문 방식은 ") and not c.last_go
+    assert c.reply(f"{w['stock']} 일반/예약 중 어느 쪽인가요?", 0) != r     # each detail is answered once
+
+
+def test_transfers_within_cash(test_tasks):
+    for t in test_tasks + build_tasks("dev"):
+        if t.tool == "transfer":
+            assert t.records["account"]["cash"] >= t.want["amount"], t.tid
+
+
+def test_customer_negation_later_in_sentence():
+    t, c = _customer()
+    assert not c._refusal("솔빛에너지는 거래정지나 투자경고 상태는 아닙니다. 주문할까요?")
+    assert c._refusal("거래정지 종목이라 주문할 수 없습니다.")
+    assert c._refusal("등록되지 않은 계좌입니다.")
+    assert c._refusal("신용거래 약정이 없습니다.")
+
+
+TASKS_DIGEST = "cd3fcdd9f8bb7e3e"   # frozen at the part B registration
+
+
+def test_tasks_digest():
+    import hashlib
+    blob = json.dumps([t.to_json() for s in ("dev", "test") for t in build_tasks(s)], ensure_ascii=False,
+                      sort_keys=True).encode("utf-8")
+    assert hashlib.sha256(blob).hexdigest()[:16] == TASKS_DIGEST

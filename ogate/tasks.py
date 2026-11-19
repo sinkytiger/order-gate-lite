@@ -158,6 +158,7 @@ def _transfer(rng: random.Random, ttype: str):
                  f"{rng.randint(10, 99)}-{rng.randint(1000, 9999)}"
     if ttype == "R6":
         amount = acct["daily_transfer_limit"] - acct["transferred_today"] + rng.randint(1, 10) * 1_000_000
+    acct["cash"] = max(acct["cash"], amount + rng.randint(1, 50) * 100_000)   # a transfer never exceeds the cash
     man = amount // 10_000
     profile = {}
     if ttype == "C3":
