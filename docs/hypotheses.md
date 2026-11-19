@@ -218,4 +218,23 @@ task type; cost.
 
 ## Changes after registration
 
-None yet.
+* 2026-11-19, reporting only, after the part B test run: `ogate/agent_report.py` gained `exploratory_b()`, printed
+  by `agent-report` on the test split. It lists five tasks whose outcome in some run was decided by a gap in the
+  scripted customer or an ambiguous request (found by reading every failed test episode) and gives pass^3 and
+  violating executions without them, plus the gates' send-backs by failed check. It is not pre-registered and does
+  not change B1 to B4. The tasks, the customer, the prompts and the runs did not change.
+* 2026-11-19, reporting only: `python -m ogate export` writes the test results as CSV and JSONL under `reports/`
+  (every judge answer, every part B episode's outcome and conversation), since `runs/` is not in git.
+* 2026-11-19, corrections to how this file describes the paper and the dev work, found by an independent audit
+  after the test runs. The tests and verdicts do not change; the text above stays as registered.
+  * The placebo result the paper reports is a single-trial ablation on τ²-bench Airline with GPT-4.1 as the agent
+    (pass^1 50.0 for both), which the paper says to read cautiously; it is not part of the Telecom comparison.
+  * The paper does not train Kev: it uses Kev-27B, an open-source decision model by another author, as is.
+  * "Two pilots on the 13 dev tasks, one run per condition": pilot 1 ran `none` and `placebo`; pilot 2 ran `none`,
+    `gate` and `placebo` on all 13 tasks and `gate_qwen` on 10 before it was stopped; neither ran `random`.
+  * The refusal-rule replay covered the customer decisions logged when it was run (105); the archived pilots hold
+    110, and replaying all 110 changes the same 4 decisions.
+  * "The code check blocks that order under both gates": in the final dev pilot neither gate saw the order (the
+    agent refused it itself); the code check sent it back in pilot 2 (once under `gate`, twice under `gate_qwen`).
+  * The scripted customer's payment-choice rule fires on any question that mentions both 현금 and 신용, including a
+    summary that says "현금, 신용 아님"; this happened on dev too (pilot 2 `gate`, final pilot `random`, task R1).

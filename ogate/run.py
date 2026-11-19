@@ -107,14 +107,21 @@ def main(argv=None) -> int:
     gr.add_argument("--model", required=True)
     gr.add_argument("--split", default="test", choices=["dev", "test"])
     gr.add_argument("--out")
+    sub.add_parser("export")
     a = ap.parse_args(argv)
     if a.cmd == "agent":
         return run_agent(a)
+    if a.cmd == "export":
+        from .export import export
+        for p in export(RUNS, ROOT / "reports"):
+            print(f"wrote {p.relative_to(ROOT)} ({p.stat().st_size:,} bytes)")
+        return 0
     if a.cmd == "agent-report":
-        from .agent_report import agent_report, prereg_b
+        from .agent_report import agent_report, exploratory_b, prereg_b
         text = agent_report(RUNS / "agent" / tag(a.model), a.split)
         if a.split == "test":
             text += "\n" + prereg_b(RUNS / "agent" / tag(a.model), a.split)
+            text += "\n" + exploratory_b(RUNS / "agent" / tag(a.model), a.split)
         if a.out:
             Path(a.out).write_text(text, encoding="utf-8")
         print(text)
